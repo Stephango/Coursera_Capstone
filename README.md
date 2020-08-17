@@ -1,2 +1,2 @@
 # Coursera_Capstone
-This project aimed to learn about Machine Learning
+This project aims to learn Machine Learning
