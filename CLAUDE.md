@@ -68,3 +68,43 @@ Every notebook follows the same pipeline:
 ## Foursquare API
 
 The Foursquare API version used is `20180604` (v2 legacy). Credentials are embedded as plain strings in the notebooks. If the credentials are expired or rate-limited, the `getNearbyVenues()` function will return empty results silently — check the raw `requests.get(url).json()` response before assuming clustering output is correct.
+
+---
+
+## BRVM Portfolio Application (`app.py`)
+
+A Streamlit web app for building and managing a profitable BRVM (West African stock exchange) portfolio.
+
+### Running the App
+
+```bash
+pip install -r requirements.txt
+streamlit run app.py
+```
+
+### Architecture
+
+```
+app.py                        # Streamlit entry point — 4 tabs
+src/
+  data/
+    fundamentals_data.py      # Static dict of ~41 BRVM stocks (PER, PBR, ROE, div yield)
+    brvm_scraper.py           # Live scraping + 1h JSON cache + GBM price history
+  analysis/
+    fundamentals.py           # Min-max scoring (0–100 composite value score)
+    optimizer.py              # PyPortfolioOpt Markowitz + Monte Carlo frontier
+data/cache/                   # Runtime JSON cache (gitignored)
+```
+
+### Key Design Decisions
+
+- **Data flow**: `get_quotes()` tries: fresh cache → live scrape → static fallback. Always returns a DataFrame, never raises.
+- **Price history**: `get_historical_prices()` generates 504 business days via GBM with a deterministic seed per ticker (`hashlib.md5(ticker)`), anchored so the last price equals `prix_ref`. Call is `@st.cache_data`-wrapped in `app.py`.
+- **Covariance**: Always uses Ledoit-Wolf shrinkage (`CovarianceShrinkage.ledoit_wolf()`) — prevents singular matrix with correlated or few assets.
+- **EfficientFrontier re-instantiation**: `optimize_portfolio()` creates a fresh `EfficientFrontier(mu, S)` on every call — pypfopt EF objects are stateful and cannot be reused after solving.
+- **Session state**: Portfolio held as `st.session_state.portfolio` (list of dicts with `ticker`, `quantite`, `prix_achat`). Persists across tab switches within a session.
+- **Pandas 3.x**: `style.map()` is used everywhere (not the deprecated `applymap`).
+
+### Adding a New BRVM Stock
+
+Add an entry to `BRVM_STOCKS` in `src/data/fundamentals_data.py` with keys: `nom`, `secteur`, `pays`, `prix_ref`, `per`, `pbr`, `roe`, `rendement_dividende`, `vol_annuelle`, `rendement_annuel`. It will automatically appear in all tabs.
