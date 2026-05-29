@@ -40,7 +40,7 @@ def optimize_portfolio(
     (weights_dict, (expected_return, annual_vol, sharpe_ratio))
     """
     if prices_df.shape[1] < 2:
-        raise ValueError("Au moins 2 actifs requis pour l'optimisation.")
+        raise RuntimeError("Au moins 2 actifs requis pour l'optimisation.")
 
     ef, mu, S = _get_ef(prices_df, risk_free_rate)
 

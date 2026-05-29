@@ -304,7 +304,7 @@ with tab_optim:
     col_o1, col_o2 = st.columns([2, 1])
     with col_o1:
         selected_tickers = st.multiselect(
-            "Sélectionnez les valeurs à optimiser (min. 3)",
+            "Sélectionnez les valeurs à optimiser (min. 2)",
             options=all_tickers,
             default=["SGBCI", "PALMCI", "TOTALCI", "ONATEL", "CIE"],
             format_func=lambda t: f"{t} — {BRVM_STOCKS[t]['nom'][:40]}",
